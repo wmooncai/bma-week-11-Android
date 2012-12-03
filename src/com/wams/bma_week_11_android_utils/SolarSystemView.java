@@ -27,11 +27,23 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 	private Debug d = new Debug(DEBUG_ON, DEBUG_LEVEL_DEBUG);
 	private static final String TAG = "SolarSystemView";
 	
-	private static final String NAME_SUN = "Sun";
+	// Substring index locations for Hex color String
+	private static final int AS = 0;
+	private static final int AE = 2;
+	private static final int RS = 2;
+	private static final int RE = 4;
+	private static final int GS = 4;
+	private static final int GE = 6;
+	private static final int BS = 6;
+	private static final int BE = 8;
+	
+	public static final String NAME_SUN = "Sun";
 	
 	private static int mXmlPlanetFile;
 	
-	private CelestialBody mSolarSystem;
+	private static float mDensity = 0;
+	
+	private static CelestialBody sSolarSystem;
 	
 	private int mScreenWidth;
 	private int mScreenHeight;
@@ -39,7 +51,10 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 	private float mPositionY = 150.0f;
 	private float mRotateDegreesVelocity = 0.0f;
 	private float mCelestialBodyRadius = 10.0f;
-	private Paint CelestialBodyPaint;
+	
+	private static Paint mPaint;
+	private static String mColorString;
+	
 	AnimateThread animateThread;
 	
 	// Matrix matrix = new Matrix();
@@ -57,22 +72,25 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
     		= new SolarSystemParserXML(context, mXmlPlanetFile);
 	    solarSystemParserXML.parse();
 	    
-	    mSolarSystem = solarSystemParserXML.getSolarSystem();
-
-		if (mSolarSystem.getName() == NAME_SUN ) {
-			mSolarSystem.setLocation(mScreenWidth/2, mScreenHeight/2);
-			mSolarSystem.setRadius((mScreenWidth/4) - mSolarSystem.getRadius());
+	    sSolarSystem = solarSystemParserXML.getSolarSystem();
+	    
+	    sSolarSystem.setCalcedVarsG(null, mDensity);
+	    
+	    mPaint = new Paint();
+/*
+		if (sSolarSystem.getName() == NAME_SUN ) {
+			sSolarSystem.setLocation(mScreenWidth/2, mScreenHeight/2);
+			sSolarSystem.setRadius((mScreenWidth/4) - sSolarSystem.getRadius());
 			d.toLog(TAG, DEBUG_LEVEL_DEBUG, "SolarSystem setLocation()");
 
 		} else {
+*/
 		getHolder().addCallback(this);
-		mCelestialBodyRadius = 10.0f;
-		CelestialBodyPaint = new Paint();
-		CelestialBodyPaint.setColor(Color.WHITE);
-		
-		d.toLog(TAG, DEBUG_LEVEL_DEBUG, "mScreenWidth: " + mScreenWidth + " / mScreenHeight: " + mScreenHeight);
 
-		}
+		
+//		d.toLog(TAG, DEBUG_LEVEL_DEBUG, "mScreenWidth: " + mScreenWidth + " / mScreenHeight: " + mScreenHeight);
+
+//		}
 	}
 	
 	// ############################## GETTERS #################################
@@ -92,10 +110,34 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 		
 		canvas.drawColor(Color.BLACK);
 
-		canvas.rotate(mRotateDegreesVelocity, mPositionX, mPositionY);
+		CelestialBody sun = sSolarSystem.getCelestialBody(null, NAME_SUN);
+		
+		// Calculate internal member graphics variables for each celestial body recursively.
+		sSolarSystem.setCalcedVarsG(null, mDensity);
+		
+		canvas.rotate(mRotateDegreesVelocity, sun.getLocationX(), sun.getLocationY());
 
 		// canvas.translate(50.0f, 50.0f);
-		canvas.drawCircle(0, 0, mCelestialBodyRadius, CelestialBodyPaint);
+		// mCelestialBodyRadius = sun.getRadiusG();
+		
+		mColorString = sun.getColor();
+		mPaint.setColor(Color.argb(Integer.parseInt(mColorString.substring(AS, AE), 16)
+									, Integer.parseInt(mColorString.substring(RS, RE), 16)
+									, Integer.parseInt(mColorString.substring(GS, GE), 16)
+									, Integer.parseInt(mColorString.substring(BS, BE), 16)));
+		
+		canvas.drawCircle(sun.getLocationX(), sun.getLocationY(), ((sun.getRadiusG() > 0) ? sun.getRadiusG() : 20), mPaint);
+		d.toLog(TAG, DEBUG_LEVEL_DEBUG, "***** Sun: X: " + sun.getLocationX() + " | Y: " + sun.getLocationY()
+				+ " | R: " + sun.getRadiusG() + " | ParentalDist: " + sun.getParentalDistanceG());
+		
+		
+		// Baseline debugging Sun
+		mPaint.setColor(Color.BLUE);
+		canvas.drawCircle(200, 200, 10, mPaint);
+		
+		mPaint.setColor(Color.LTGRAY);
+		canvas.drawCircle(150, 150, 5, mPaint);
+
 	}
 	
 	public void updateView(Canvas canvas) {
@@ -147,6 +189,14 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 		mScreenWidth = w;
 		mScreenHeight = h;
 	
+		mDensity = getResources().getDisplayMetrics().density;
+		
+		sSolarSystem.getCelestialBody(null, NAME_SUN).setLocation(mScreenWidth/2, mScreenWidth/2);
+		d.toLog(TAG,  DEBUG_LEVEL_DEBUG, "onSizeChanged() - sun.locX: "
+				+ sSolarSystem.getCelestialBody(null, "Sun").getLocationX() + " | sun.locY: "
+				+ sSolarSystem.getCelestialBody(null, "Sun").getLocationY());
+
+		
 		d.toLog(TAG, DEBUG_LEVEL_INFORMATIONAL
 				, "onSizeChanged(): width " + mScreenWidth
 				+ " / mScreenHeight: " + mScreenHeight);

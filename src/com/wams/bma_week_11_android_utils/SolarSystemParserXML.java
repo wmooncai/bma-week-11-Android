@@ -66,7 +66,12 @@ public class SolarSystemParserXML extends ParserXML implements DebugInterface, P
 
     	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() start");
 
-    	parseDetails();
+    	// Parse XML file containing solar system and celestial body information
+    	parseSolarSystemXML();
+    	
+    	// Derive and calculate internal member variables for each celestial body recursively.
+    	sSolarSystem.setMinsMaxs(null);
+    	
 
     	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() end");
 
@@ -83,7 +88,7 @@ public class SolarSystemParserXML extends ParserXML implements DebugInterface, P
 		*/
     }
  
-    private void parseDetails() {
+    private void parseSolarSystemXML() {
     	
     	CelestialBody celestialBody = new CelestialBody(sSolarSystem, sMaxNameLen);
     	

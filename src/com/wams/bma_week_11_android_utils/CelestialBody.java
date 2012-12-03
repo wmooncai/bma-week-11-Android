@@ -3,6 +3,8 @@
  */
 package com.wams.bma_week_11_android_utils;
 
+import static java.lang.Math.*;
+
 /**
  * @author W. Mooncai
  * @since 0.0
@@ -13,10 +15,16 @@ package com.wams.bma_week_11_android_utils;
  *  - http://solarsystem.nasa.gov/planets/
  *
  */
+
+// TODO There are so many getters and setters, we may want to make some of the members public and directly access them to increase performance.
+
 public class CelestialBody implements DebugInterface {
 
 	private static Debug d = new Debug(true, DEBUG_LEVEL_DEBUG);
 	private static final String TAG = "CelestialBody";
+	
+	public static final String NAME_SOLAR_SYSTEM = "Solar System";
+	public static final String NAME_SUN = "SUN";
 	
 	private static CelestialBody sSolarSystem;
 	private static int sMaxNameLen = 9;
@@ -36,9 +44,16 @@ public class CelestialBody implements DebugInterface {
 	private int mFirstAvailableSatellite = 0;
 	// private int mSatelliteQty = 0;	// DUPLICATE information
 
-	
+	// Raw Min / Max variables derived from other member variables
 	private int mSatMinRadius = 0;
 	private int mSatMinParentalDistance = 0;
+	private int mSatMaxParentalDistance = 0;
+	private int mSatMinYear = 0;
+	
+	// Calculated Min / Max variables (G for graphics)
+	private int mRadiusG = 0;
+	private int mParentalDistanceG = 0;
+	private int mOrbitalVelocityG = 0;
 	
 
 	// ########################### CONSTRUCTORS ###############################
@@ -165,14 +180,119 @@ public class CelestialBody implements DebugInterface {
 	 * 
 	 */
 	public void setOrbitalVelocity(float velocity) { mOrbitalVelocity = velocity; }
+	
+	public void setOrbitalVelocityG(int vel) { mOrbitalVelocityG = vel; }
+	
+	public void setParentalDistanceG(int dist) { mParentalDistanceG = dist; }
+	
+	public void setRadiusG(int radius) { mRadiusG = radius; }
+
+	public void setSatMinRadius(float radius) { mSatMinRadius = round(radius); }
+	
+	public void setSatMinParentalDistance(float distance) {
+		mSatMinParentalDistance = round(distance);
+		}
+	
+	public void setSatMaxParentalDistance(float distance) {
+		mSatMaxParentalDistance = round(distance);
+		}
+
+	public void setSatMinYear(float radius) { mSatMinRadius = round(radius); }
 
 	// ------------------------ INTERNAL SETTERS ------------------------------
 	
-	public void setRadiusGMinMax() {
+	/**
+	 * Set the Min / Max internal derived member variables based on input celestial body values.
+	 * 
+	 * @since 0.0
+	 * 
+	 * @param cb	Starting celestial body from which to recurse.
+	 * 
+	 */
+	public void setMinsMaxs(CelestialBody cb) {
+				
+		if (cb == null) cb = sSolarSystem;
 		
-		
+		if (cb.getFirstAvailableSatellite() > 0) {
+			
+			int index = 0;
+			int lastCb = cb.getFirstAvailableSatellite();
+					
+			CelestialBody[] satellites = cb.getSatellites();
+			
+			mSatMinRadius = round(mRadius);
+			mSatMaxParentalDistance = round(mSatMaxParentalDistance);
+			mSatMinParentalDistance = round(mSatMinParentalDistance);
+			
+			while (index < lastCb) {
+				
+				if (mSatMinRadius == 0) cb.setSatMinRadius(satellites[index].getRadius());
+					else cb.setSatMinRadius(
+							min(mSatMinRadius, satellites[index].getRadius()));
+				
+				if (mSatMaxParentalDistance == 0) cb.setSatMaxParentalDistance(satellites[index].getParentalDistance());
+					else cb.setSatMaxParentalDistance(max(mSatMaxParentalDistance, satellites[index].getParentalDistance()));
+				
+				if (mSatMinParentalDistance == 0) cb.setSatMinParentalDistance(satellites[index].getParentalDistance());
+					else cb.setSatMinParentalDistance(min(mSatMinParentalDistance, satellites[index].getParentalDistance()));
+				
+				// Recurse...
+				if (satellites[index].getFirstAvailableSatellite() > 0) setMinsMaxs(satellites[index]);
+				
+				index++;
+			}
+		}
 	}
 	
+	/**
+	 * Calculate the internal graphics member variables.
+	 * 
+	 * @since 0.0
+	 * 
+	 * @param cbParent	Starting celestial body from which to recurse.
+	 * 
+	 */
+	public void setCalcedVarsG(CelestialBody cb, float density) {
+		
+		
+		cb = ( (cb == null) ? sSolarSystem : cb );
+		
+		if ( (!cb.getName().equalsIgnoreCase(NAME_SOLAR_SYSTEM))
+				&&  (!cb.getName().equalsIgnoreCase(NAME_SUN)) ) {
+			
+			// Calculate for this celestial body
+			/*
+			private int mRadiusG = 0;
+			private int mParentalDistanceG = 0;
+			private int mOrbitalVelocityG = 0;
+			*/
+			
+			float radiusRelParent = round( cb.getRadius()
+					/ ((cb.getSatMinRadius() == 0) ? cb.getParent().getRadiusG() : cb.getSatMinRadius()) * density );
+			cb.setRadiusG( (radiusRelParent < 1) ? 1 : round(radiusRelParent) );
+			
+			// TODO fix these calcs:
+			cb.setParentalDistanceG( round( cb.getParentalDistance() / cb.getSatMinParentalDistance() * density ) );
+			cb.setOrbitalVelocityG( round( mOrbitalVelocity / cb.getSatMinYear() ) );
+		}
+		
+		// Recurse...
+		if (cb.getFirstAvailableSatellite() > 0) {
+			int index = 0;
+			int lastCb = cb.getFirstAvailableSatellite();
+					
+			CelestialBody[] satellites = cb.getSatellites();
+			
+			while (index < lastCb) {
+	
+				if (satellites[index].getFirstAvailableSatellite() > 0)
+					setCalcedVarsG(satellites[index], density);
+				
+				index++;
+			}
+		}
+		
+	}
 	// ############################# GETTERS ##################################
 
 	/**
@@ -214,6 +334,16 @@ public class CelestialBody implements DebugInterface {
 		return result;
 	}
 	
+	/**
+	 * Get the color of this celestial body in ARGB (#AARRGGBB)
+	 * 
+	 * @since 0.0
+	 * 
+	 * @return	The color of this celestial body in ARGB(#AARRGGBB).
+	 * 
+	 */
+	public String getColor() { return(mColor); }
+
 	/**
 	 * Get the array index of the next available satellite in the satellites array.
 	 * 
@@ -264,6 +394,8 @@ public class CelestialBody implements DebugInterface {
 	 */
 	public float getOrbitalVelocity() { return(mOrbitalVelocity); }
 	
+	public int getOrbitalVelocityG() { return(mOrbitalVelocityG); }
+	
 	/**
 	 * Get the orbital distance between this and parental celestial bodies in kilometers.
 	 * 
@@ -273,6 +405,8 @@ public class CelestialBody implements DebugInterface {
 	 * 
 	 */
 	public float getParentalDistance() { return(mParentalDistance); }
+	
+	public float getParentalDistanceG() { return mParentalDistanceG; }
 	
 	/**
 	 * Get the parent of this celestial body; and find it if currently unknown.
@@ -307,6 +441,8 @@ public class CelestialBody implements DebugInterface {
 	 */
 	public float getRadius() { return(mRadius); }
 	
+	public int getRadiusG() { return(mRadiusG); }
+	
 	/**
 	 * Get an array containing pointers to this celestial body's satellites.
 	 * 
@@ -334,16 +470,6 @@ public class CelestialBody implements DebugInterface {
 	public int getSatelliteQty() { return(mFirstAvailableSatellite); }
 	
 	/**
-	 * Get the color of this celestial body in ARGB (#AARRGGBB)
-	 * 
-	 * @since 0.0
-	 * 
-	 * @return	The color of this celestial body in ARGB(#AARRGGBB).
-	 * 
-	 */
-	public String getColor() { return(mColor); }
-	
-	/**
 	 * Get a direct satellite of this celestial body.
 	 * 
 	 * @since 0.0
@@ -362,6 +488,14 @@ public class CelestialBody implements DebugInterface {
 		}
 		return null;
 	}
+	
+	public int getSatMinRadius() { return mSatMinRadius; }
+	
+	public int getSatMaxParentalDistance() { return mSatMaxParentalDistance; }
+
+	public int getSatMinParentalDistance() { return mSatMinParentalDistance; }
+	
+	public int getSatMinYear() { return mSatMinYear; }
 	
 	// ############################# METHODS ##################################
 

@@ -3,22 +3,10 @@
     <string name="app_name">BMA week 11 Android</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">Solar System</string>
     <string name="black_hole">Black Hole</string>
     <string name="solar_system">Solar System</string>
     <integer name="max_name_len">12</integer>
     <string name="color_gray">gray</string>
     <string name="color_yellow">gray</string>
-    <!-- 
-yellow
-gray
-cream
-blue
-orange
-pink
-rust
-aqua
-bright blue
-yellow-black
- -->
 </resources>

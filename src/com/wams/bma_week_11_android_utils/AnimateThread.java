@@ -15,17 +15,20 @@ import android.view.SurfaceHolder;
  * Thread to update graphics objects.
  *
  */
-public class AnimateThread extends Thread {
+public class AnimateThread extends Thread implements DebugInterface {
+	
+	private static final Debug d = new Debug(DEBUG_ON, DEBUG_LEVEL_DEBUG);
+	private static final String TAG = "AnimateThread";
 	
 	public static final boolean THREAD_STOP = false;
 	public static final boolean THREAD_GO = true;
 	
-
-	private long mTime;
-	private final int mFps = 10;
-	private boolean mToRun = false;
-	private SolarSystemView mSolarSystemView;
-	private SurfaceHolder mSurfaceHolder;
+	private static final int mFps = 20;
+	
+	private static long mTime;
+	private static boolean mToRun = false;
+	private static SolarSystemView mSolarSystemView;
+	private static SurfaceHolder mSurfaceHolder;
 
 	// ########################## CONSTRUCTORS #################################
 
@@ -47,33 +50,29 @@ public class AnimateThread extends Thread {
 	@Override
 	public void run() {
 		
-		Canvas canvas;
-/*
-        SolarSystemParserXML solarSystemParserXML
-    	= new SolarSystemParserXML(mSolarSystemView.getContext()
-    			, mSolarSystemView.getXmlPlanetFile());
-	    solarSystemParserXML.parse();
-	    
-	    CelestialBody solarSystem = solarSystemParserXML.getSolarSystem();
-*/
-		while (mToRun == THREAD_GO) {
-			
-			long cTime = System.currentTimeMillis();
-			if ((cTime = mTime) <= (1000 / mFps)) {
-				canvas = null;
-				try {
-					canvas = mSurfaceHolder.lockCanvas(null);
-					mSolarSystemView.updateView(canvas);
-					mSolarSystemView.onDraw(canvas);
-				} finally {
-					if (canvas != null) {
-						mSurfaceHolder.unlockCanvasAndPost(canvas);
+		try {
+			Canvas canvas;
+	
+			while (mToRun == THREAD_GO) {
+				
+				long cTime = System.currentTimeMillis();
+				if ((cTime = mTime) <= (1000 / mFps)) {
+					canvas = null;
+					try {
+						canvas = mSurfaceHolder.lockCanvas(null);
+						mSolarSystemView.updateView(canvas);
+						mSolarSystemView.onDraw(canvas);
+					} finally {
+						if (canvas != null) {
+							mSurfaceHolder.unlockCanvasAndPost(canvas);
+						}
 					}
 				}
+				mTime = cTime;
 			}
-			mTime = cTime;
+		} catch (Exception e) {
+			d.toLog(TAG, DEBUG_LEVEL_DEBUG, "run() thread Exception: " + e.toString());
 		}
-		
 	}
 	
 } // AnimateThread CLASS
