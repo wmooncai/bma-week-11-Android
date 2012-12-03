@@ -6,7 +6,6 @@ package com.wams.bma_week_11_android_utils;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.SurfaceHolder;
@@ -25,50 +24,65 @@ import android.view.SurfaceView;
  */
 public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callback, DebugInterface {
 
-	private Debug d = new Debug(DEBUG_OFF, DEBUG_LEVEL_DEBUG);
+	private Debug d = new Debug(DEBUG_ON, DEBUG_LEVEL_DEBUG);
 	private static final String TAG = "SolarSystemView";
 	
 	private static final String NAME_SUN = "Sun";
 	
-	private CelestialBody celestialBody;
+	private static int mXmlPlanetFile;
 	
-	private int mWidth;
-	private int mHeight;
+	private CelestialBody mSolarSystem;
+	
+	private int mScreenWidth;
+	private int mScreenHeight;
 	private float mPositionX = 150.0f;
 	private float mPositionY = 150.0f;
 	private float mRotateDegreesVelocity = 0.0f;
 	private float mCelestialBodyRadius = 10.0f;
 	private Paint CelestialBodyPaint;
 	AnimateThread animateThread;
-	Matrix matrix = new Matrix();
+	
+	// Matrix matrix = new Matrix();
 	
 	// ########################## CONSTRUCTORS #################################
 
-	public SolarSystemView(Context context) {
-		super(context);
-
-	}
+	public SolarSystemView(Context context) { super(context); }
 	
 	public SolarSystemView(Context context, int xmlFile) {
 		super(context);
-
+		
+		mXmlPlanetFile = xmlFile;
+		
         SolarSystemParserXML solarSystemParserXML
-        	= new SolarSystemParserXML(context
-        			, xmlFile);
-        solarSystemParserXML.parse();
-        
-		celestialBody = solarSystemParserXML.getSolarSystem();
-		
-		if (celestialBody.getName() == NAME_SUN )
-			celestialBody.setLocation(mWidth/2, mHeight/2);
-		
+    		= new SolarSystemParserXML(context, mXmlPlanetFile);
+	    solarSystemParserXML.parse();
+	    
+	    mSolarSystem = solarSystemParserXML.getSolarSystem();
+
+		if (mSolarSystem.getName() == NAME_SUN ) {
+			mSolarSystem.setLocation(mScreenWidth/2, mScreenHeight/2);
+			mSolarSystem.setRadius((mScreenWidth/4) - mSolarSystem.getRadius());
+			d.toLog(TAG, DEBUG_LEVEL_DEBUG, "SolarSystem setLocation()");
+
+		} else {
 		getHolder().addCallback(this);
 		mCelestialBodyRadius = 10.0f;
 		CelestialBodyPaint = new Paint();
 		CelestialBodyPaint.setColor(Color.WHITE);
 		
+		d.toLog(TAG, DEBUG_LEVEL_DEBUG, "mScreenWidth: " + mScreenWidth + " / mScreenHeight: " + mScreenHeight);
+
+		}
 	}
 	
+	// ############################## GETTERS #################################
+
+	public int getXmlPlanetFile() { return mXmlPlanetFile; }
+	
+	public int getScreenHeight() { return mScreenHeight; }
+	
+	public int getScreenWidth() { return mScreenWidth; }
+
 	// ############################## METHODS #################################
 
 	@Override
@@ -76,14 +90,11 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 
 		super.onDraw(canvas);
 		
-		d.toLog(TAG, DEBUG_LEVEL_DEBUG, "mWidth: " + mWidth + " / mHeight: " + mHeight);
-
-		
 		canvas.drawColor(Color.BLACK);
-		// matrix.
+
 		canvas.rotate(mRotateDegreesVelocity, mPositionX, mPositionY);
 
-		canvas.translate(100.0f, 100.0f);
+		// canvas.translate(50.0f, 50.0f);
 		canvas.drawCircle(0, 0, mCelestialBodyRadius, CelestialBodyPaint);
 	}
 	
@@ -100,11 +111,11 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 		
 		Rect surfaceFrame = holder.getSurfaceFrame();
 		
-		mWidth = surfaceFrame.width();
-		mHeight = surfaceFrame.height();
+		mScreenWidth = surfaceFrame.width();
+		mScreenHeight = surfaceFrame.height();
 		
-		mPositionX = mWidth / 2;
-		mPositionY = mHeight / 2;  //TODO check this - originally = mCelestialBodyRadius
+		mPositionX = mScreenWidth / 2;
+		mPositionY = mScreenHeight / 2;
 		
 		animateThread = new AnimateThread(this);
 		animateThread.setRunning(true);
@@ -126,6 +137,19 @@ public class SolarSystemView extends SurfaceView implements SurfaceHolder.Callba
 			} catch (InterruptedException e) {
 			}
 		}
+	}
+	
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+
+		super.onSizeChanged(w, h, oldw, oldh);
+			
+		mScreenWidth = w;
+		mScreenHeight = h;
+	
+		d.toLog(TAG, DEBUG_LEVEL_INFORMATIONAL
+				, "onSizeChanged(): width " + mScreenWidth
+				+ " / mScreenHeight: " + mScreenHeight);
 	}
 	
 }

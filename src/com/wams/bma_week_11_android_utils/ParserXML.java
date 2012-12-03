@@ -34,11 +34,10 @@ public abstract class ParserXML implements ParserXML_Interface, DebugInterface {
     URL mFeedUrl;
     XmlPullParser mParser = Xml.newPullParser();
     InputStream mInputXml;
-    
 
     // ########################################################################
     
-	protected ParserXML(Context ctxt, URL feedUrl) {
+	public ParserXML(Context ctxt, URL feedUrl) {
 
 		mContext = ctxt;
 		mRes = mContext.getResources();

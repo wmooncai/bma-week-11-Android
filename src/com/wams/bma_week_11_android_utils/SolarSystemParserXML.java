@@ -29,8 +29,11 @@ import android.content.Context;
 
 public class SolarSystemParserXML extends ParserXML implements DebugInterface, ParserXML_Interface {
 	
-	private static final Debug d = new Debug(true, DEBUG_LEVEL_DEBUG);
+	private static final Debug d = new Debug(DEBUG_ON, DEBUG_LEVEL_DEBUG);
 	private static final String TAG = "SolarSystemParserXML";
+	
+	private static CelestialBody sSolarSystem;
+	private static int sMaxNameLen;
 	
     // XML tag constants
 	private final static String SOLAR_SYSTEM_TAG = "solarSystem";
@@ -44,30 +47,29 @@ public class SolarSystemParserXML extends ParserXML implements DebugInterface, P
 	private final static String ORBITAL_VELOCITY_TAG = "orbitalVelocity";
 	private final static String SATELLITES_TAG = "satellites";
 	
-	private CelestialBody mSolarSystem;
-	
-	private int mMaxNameLen;
-	
 	//#########################################################################
 	
     public SolarSystemParserXML(Context context, int xmlFile) {
         super(context, context.getResources().getXml(xmlFile));
         
-        mMaxNameLen = mRes.getInteger(R.integer.max_name_len);
+        sMaxNameLen = mRes.getInteger(R.integer.max_name_len);
         
-        mSolarSystem = new CelestialBody(mMaxNameLen);
-        mSolarSystem.setSatellites(1);
-        mSolarSystem.setName(mRes.getString(R.string.solar_system));
-        mSolarSystem.setParentName(mRes.getString(R.string.black_hole));
+        sSolarSystem = new CelestialBody(sSolarSystem, sMaxNameLen);
+        sSolarSystem.setupSatellites(1);
+        sSolarSystem.setName(mRes.getString(R.string.solar_system));
+        sSolarSystem.setParent(null);
+        // sSolarSystem.setParentName(mRes.getString(R.string.black_hole));
     }
     
     @Override
     public void parse() {
 
-    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parse() start");
+    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() start");
 
-    	mSolarSystem.addSatellite(parseDetails(mSolarSystem));
-    	
+    	parseDetails();
+
+    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() end");
+
     	/*
     	new Thread(new Runnable() {
 			@Override
@@ -75,94 +77,115 @@ public class SolarSystemParserXML extends ParserXML implements DebugInterface, P
 		        
 	        	Looper.prepare();
 		            
-	        	mSolarSystem.addSatellite(parseDetails(mSolarSystem));
+	        	sSolarSystem.addSatellite(parseDetails(sSolarSystem));
 			}    
 		}).start();
 		*/
     }
  
-    private CelestialBody parseDetails(CelestialBody parentCB) {
-
-    	CelestialBody celestialBody = new CelestialBody(mMaxNameLen);
+    private void parseDetails() {
     	
-        try {        
-            String eventName = new String();
+    	CelestialBody celestialBody = new CelestialBody(sSolarSystem, sMaxNameLen);
+    	
+        try {
 
             boolean done = false;
             
             int eventType = mParser.getEventType();
+            String element = null;
             
 	        while ((eventType != XmlPullParser.END_DOCUMENT) && !done) {
+	        	// element = null;
 	        	
 	            switch (eventType){
 	                case XmlPullParser.START_DOCUMENT:
 	                    // do nothing
 	                    break;
 	                case XmlPullParser.START_TAG:
-	                    eventName = mParser.getName();
+	                    element = mParser.getName();
+	                    
 	                    d.toLog(TAG, DEBUG_LEVEL_DEBUG
-	                    	, "parse() - Element: " + eventName);
-	                    if (eventName.equalsIgnoreCase(PLANET_TAG)) {
-	                    	// do nothing
-	                    } else {
-	                        if (eventName.equalsIgnoreCase(NAME_TAG)) {
+	                    	, "parseDetails() - START_TAG Element: " + element);
+	                    
+	                    if (element.equalsIgnoreCase(PLANET_TAG)) {
+	                    	celestialBody = new CelestialBody(sSolarSystem, sMaxNameLen);
+
+	                    } else if (element.equalsIgnoreCase(NAME_TAG)) {
 	                        	celestialBody.setName(mParser.nextText());
 	                        	
-	                        }else if (eventName.equalsIgnoreCase(PARENT_NAME_TAG)) {
-	                        	celestialBody.setParentName(mParser.nextText());
-	                        	celestialBody.setParent(celestialBody
-	                        			.getCelestialBody(mSolarSystem
-	                        								, celestialBody.getParentName()));
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(RADIUS_TAG)) {
-	                        	celestialBody.setRadius(Float.parseFloat(mParser.nextText()));
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(COLOR_TAG)) {
-	                        	celestialBody.setColor(mParser.nextText());
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(PARENTAL_DISTANCE_TAG)) {
-	                        	celestialBody.setParentalDistance(Float.parseFloat(mParser.nextText()));
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(YEAR_TAG)) {
-	                        	celestialBody.setYear(Integer.parseInt(mParser.nextText()));
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(ORBITAL_VELOCITY_TAG)) {
-	                        	celestialBody.setOrbitalVelocity(Float.parseFloat(mParser.nextText()));
-	                        	
-	                        } else if (eventName.equalsIgnoreCase(SATELLITES_TAG)) {
-	                        	celestialBody.setSatellites(Integer.parseInt(mParser.nextText()));
-	                        }
-	                    }
+                        }else if (element.equalsIgnoreCase(PARENT_NAME_TAG)) {
+                        	
+                        	celestialBody.setParentName(mParser.nextText());
+                        	
+                        	celestialBody.setParent(sSolarSystem
+                        								.getCelestialBody(null
+                        								, celestialBody
+                        									.getParentName()));
+                        	
+                        } else if (element.equalsIgnoreCase(RADIUS_TAG)) {
+                        	celestialBody.setRadius(Float.parseFloat(mParser.nextText()));
+                        	
+                        } else if (element.equalsIgnoreCase(COLOR_TAG)) {
+                        	celestialBody.setColor(mParser.nextText());
+                        	
+                        } else if (element.equalsIgnoreCase(PARENTAL_DISTANCE_TAG)) {
+                        	celestialBody.setParentalDistance(Float.parseFloat(mParser.nextText()));
+                        	
+                        } else if (element.equalsIgnoreCase(YEAR_TAG)) {
+                        	celestialBody.setYear(Integer.parseInt(mParser.nextText()));
+                        	
+                        } else if (element.equalsIgnoreCase(ORBITAL_VELOCITY_TAG)) {
+                        	celestialBody.setOrbitalVelocity(Float.parseFloat(mParser.nextText()));
+                        	
+                        } else if (element.equalsIgnoreCase(SATELLITES_TAG)) {
+                        	celestialBody.setupSatellites(Integer.parseInt(mParser.nextText()));
+                        }
 	                    break;
 	                    
 	                case XmlPullParser.END_TAG:
+
+	                    element = mParser.getName();
 	                	
-	                    if (eventName.equalsIgnoreCase(SOLAR_SYSTEM_TAG)){
+	                	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "END_TAG Name: " + mParser.getName());
+	                	d.toLog(TAG, DEBUG_LEVEL_DEBUG, celestialBody.toString());
+	                	
+	                    if (element.equalsIgnoreCase(SOLAR_SYSTEM_TAG)) {
 	                        done = true;
-	                    } else if (eventName.equalsIgnoreCase(PLANET_TAG)) {
-	                    	eventType = mParser.next();
+	                    } else if (element.equalsIgnoreCase(PLANET_TAG)) {
 	                    	
-	                    	mSolarSystem.getCelestialBody(mSolarSystem, celestialBody.getParentName())
-	                    		.addSatellite(celestialBody);
+	                    	if (celestialBody.getParentName() != null)
+	                    		if (celestialBody.getName().equals("Sun")) {
+	                    			celestialBody.setParent(sSolarSystem);
+	                    			sSolarSystem.addSatellite(celestialBody);
+	                    		} else if (!celestialBody.getParentName().equals("Solar System")) { // Not "Sun" CB
+	                    			celestialBody.setParent(sSolarSystem.getCelestialBody(sSolarSystem, celestialBody.getParentName()));
+	                    			celestialBody.getParent().addSatellite(celestialBody);
+	                    		} 
+	                    	
+
+	                    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "END_TAG PLANET_TAG: "
+	                    			+ celestialBody.toString());
 	                    }
+	                    
+	                    // eventType = mParser.next();
 	                    break;
 		            }
 	            eventType = mParser.next();
 	        }
-	        if (mInputXml != null) mInputXml.close();
+	        if (mInputXml != null)
+	        	mInputXml.close();
 	
 	    } catch (IOException e) {
-	    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parse() - Exception: " + e);
+	    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() - Exception: " + e);
 	    	e.printStackTrace();
 	    } catch (XmlPullParserException e) {
-	    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parse() XmlPullParserException: " + e);
+	    	d.toLog(TAG, DEBUG_LEVEL_DEBUG, "parseDetails() XmlPullParserException: " + e);
 			e.printStackTrace();
 		}
-        return celestialBody;
     }
 
     // ################################# GETTERS ##############################
     
-    public CelestialBody getSolarSystem() { return mSolarSystem; }
+    public CelestialBody getSolarSystem() { return sSolarSystem; }
     
 } // SolarSystemParserXML CLASS

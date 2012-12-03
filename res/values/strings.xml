@@ -4,15 +4,12 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
-    
     <string name="black_hole">Black Hole</string>
     <string name="solar_system">Solar System</string>
-    <integer name="max_name_len">10</integer>
-
-	<string name="color_gray">gray</string>
-	<string name="color_yellow">gray</string>
-
-<!-- 
+    <integer name="max_name_len">12</integer>
+    <string name="color_gray">gray</string>
+    <string name="color_yellow">gray</string>
+    <!-- 
 yellow
 gray
 cream
@@ -24,5 +21,4 @@ aqua
 bright blue
 yellow-black
  -->
-	
 </resources>

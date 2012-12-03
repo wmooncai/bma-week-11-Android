@@ -12,7 +12,7 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
                 
-        setContentView(new SolarSystemView(getApplicationContext()
+        setContentView(new SolarSystemView(this
         		, R.xml.bma_week_11_planets));
     }
 

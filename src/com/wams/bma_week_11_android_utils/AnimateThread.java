@@ -16,6 +16,10 @@ import android.view.SurfaceHolder;
  *
  */
 public class AnimateThread extends Thread {
+	
+	public static final boolean THREAD_STOP = false;
+	public static final boolean THREAD_GO = true;
+	
 
 	private long mTime;
 	private final int mFps = 10;
@@ -25,9 +29,9 @@ public class AnimateThread extends Thread {
 
 	// ########################## CONSTRUCTORS #################################
 
-	public AnimateThread(SolarSystemView rSolarSystemView) {
+	public AnimateThread(SolarSystemView solarSystemView) {
 		
-		mSolarSystemView = rSolarSystemView;
+		mSolarSystemView = solarSystemView;
 		mSurfaceHolder = mSolarSystemView.getHolder();
 	}
 	
@@ -44,8 +48,15 @@ public class AnimateThread extends Thread {
 	public void run() {
 		
 		Canvas canvas;
-		
-		while (mToRun) {
+/*
+        SolarSystemParserXML solarSystemParserXML
+    	= new SolarSystemParserXML(mSolarSystemView.getContext()
+    			, mSolarSystemView.getXmlPlanetFile());
+	    solarSystemParserXML.parse();
+	    
+	    CelestialBody solarSystem = solarSystemParserXML.getSolarSystem();
+*/
+		while (mToRun == THREAD_GO) {
 			
 			long cTime = System.currentTimeMillis();
 			if ((cTime = mTime) <= (1000 / mFps)) {
