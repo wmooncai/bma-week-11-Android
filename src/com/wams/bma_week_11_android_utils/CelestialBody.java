@@ -13,6 +13,9 @@ import static java.lang.Math.*;
  * 
  * Source of astronomical data:
  *  - http://solarsystem.nasa.gov/planets/
+ *  
+ *  Reducing use of Getters and Setters:
+ *  - http://developer.android.com/training/articles/perf-tips.html#GettersSetters
  *
  */
 
@@ -30,30 +33,30 @@ public class CelestialBody implements DebugInterface {
 	private static int sMaxNameLen = 9;
 	
 	private String mColor;
-	private float mLocationX = 0;
-	private float mLocationY = 0;
-	private String mName;
-	private float mOrbitalVelocity = 0;
-	private CelestialBody mParent;
-	private float mParentalDistance = 0;
-	private String mParentName;
+	public float mLocationX = 0;
+	public float mLocationY = 0;
+	public String mName;
+	public float mOrbitalVelocity = 0;
+	public CelestialBody mParent;
+	public float mParentalDistance = 0;
+	public String mParentName;
 	private float mRadius = 0;
 	private int mYear = 0;
 	
-	private CelestialBody[] mSatellites;
-	private int mFirstAvailableSatellite = 0;
-	// private int mSatelliteQty = 0;	// DUPLICATE information
+	public CelestialBody[] mSatellites;
+	public int mFirstAvailableSatellite = 0;
 
 	// Raw Min / Max variables derived from other member variables
-	private int mSatMinRadius = 0;
-	private int mSatMinParentalDistance = 0;
-	private int mSatMaxParentalDistance = 0;
-	private int mSatMinYear = 0;
+	public int mSatMinRadius = 0;
+	public int mSatMaxRadius = 0;
+	public int mSatMinParentalDistance = 0;
+	public int mSatMaxParentalDistance = 0;
+	public int mSatMinVelocity = 0;
 	
 	// Calculated Min / Max variables (G for graphics)
-	private int mRadiusG = 0;
-	private int mParentalDistanceG = 0;
-	private int mOrbitalVelocityG = 0;
+	public int mRadiusG = 0;
+	public int mParentalDistanceG = 0;
+	public int mOrbitalVelocityG = 0;
 	
 
 	// ########################### CONSTRUCTORS ###############################
@@ -495,7 +498,7 @@ public class CelestialBody implements DebugInterface {
 
 	public int getSatMinParentalDistance() { return mSatMinParentalDistance; }
 	
-	public int getSatMinYear() { return mSatMinYear; }
+	public int getSatMinYear() { return mSatMinVelocity; }
 	
 	// ############################# METHODS ##################################
 

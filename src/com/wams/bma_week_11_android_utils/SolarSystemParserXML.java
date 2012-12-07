@@ -4,6 +4,7 @@
 package com.wams.bma_week_11_android_utils;
 
 import java.io.IOException;
+import static java.lang.Math.*;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -11,7 +12,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import com.wams.bma_week_11_android.R;
 
 import android.content.Context;
-// import android.os.Looper;
 
 /**
  * @author W. Mooncai
@@ -162,9 +162,22 @@ public class SolarSystemParserXML extends ParserXML implements DebugInterface, P
 	                    		if (celestialBody.getName().equals("Sun")) {
 	                    			celestialBody.setParent(sSolarSystem);
 	                    			sSolarSystem.addSatellite(celestialBody);
-	                    		} else if (!celestialBody.getParentName().equals("Solar System")) { // Not "Sun" CB
+	                    		} else if (!celestialBody.getParentName().equals("Solar System")) {
+	                    			
+	                    			// Set parent of CB < Sun
 	                    			celestialBody.setParent(sSolarSystem.getCelestialBody(sSolarSystem, celestialBody.getParentName()));
 	                    			celestialBody.getParent().addSatellite(celestialBody);
+	                    			
+	                    			celestialBody.mParent.mSatMaxParentalDistance
+	                    				= max(celestialBody.mParent.mSatMaxParentalDistance
+	                    						, celestialBody.mFirstAvailableSatellite);
+	                    			
+	                    			celestialBody.mParent.mSatMinRadius
+	                    				= round( min((celestialBody.mParent.mSatMinRadius == 0)
+	                    						? celestialBody.mParentalDistance : celestialBody.mParent.mSatMinRadius
+	                    						, celestialBody.mParent.mSatMinRadius) );
+	                    			
+	                    			// TODO mSatMaxRadius recalc, and others?
 	                    		} 
 	                    	
 
